@@ -1,0 +1,36 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ES2022",
+        "moduleResolution": "bundler",
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "sourceMap": false,
+        "strict": true,
+        "skipLibCheck": true,
+        "noEmit": false,
+        "declaration": false,
+        "lib": ["ES2022"],
+        "baseUrl": ".",
+        "paths": {
+            "resource:///org/gnome/shell/extensions/extension.js": ["./types/local/extension.d.ts"],
+            "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js": ["./types/local/prefs.d.ts"],
+            "resource:///org/gnome/shell/ui/main.js": ["./types/gnome-shell/packages/gnome-shell/src/ui/main.d.ts"],
+            "@girs/*": ["./types/girs/*"]
+        }
+    },
+    "include": [
+        "ambient.d.ts",
+        "types/gnome-shell/packages/gnome-shell/src/extensions/global.d.ts"
+    ],
+    "files": [
+        "src/extension.ts",
+        "src/prefs.ts",
+        "src/windowTracker.ts",
+        "src/decorationManager.ts",
+        "src/borderEffect.ts",
+        "src/overlayEffect.ts",
+        "src/colorResolver.ts",
+        "src/constants.ts"
+    ]
+}

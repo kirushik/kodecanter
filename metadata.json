@@ -1,0 +1,8 @@
+{
+    "uuid": "kodecanter@kirushik.github.io",
+    "name": "Kodecanter",
+    "description": "Colors Zed editor windows by project for instant visual identification",
+    "shell-version": ["49"],
+    "url": "https://github.com/kirushik/kodecanter",
+    "settings-schema": "org.gnome.shell.extensions.kodecanter"
+}

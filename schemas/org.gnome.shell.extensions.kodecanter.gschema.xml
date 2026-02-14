@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.kodecanter"
+          path="/org/gnome/shell/extensions/kodecanter/">
+    <key name="border-enabled" type="b"><default>true</default></key>
+    <key name="badge-enabled" type="b"><default>true</default></key>
+    <key name="overlay-enabled" type="b"><default>false</default></key>
+    <key name="border-width" type="i"><default>3</default><range min="1" max="10"/></key>
+    <key name="border-radius" type="i"><default>12</default><range min="0" max="24"/></key>
+    <key name="overlay-opacity" type="i"><default>15</default><range min="0" max="100"/></key>
+    <key name="color-overrides" type="a{ss}"><default>{}</default></key>
+  </schema>
+</schemalist>
