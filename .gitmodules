@@ -4,3 +4,4 @@
 [submodule "types/gnome-shell"]
 	path = types/gnome-shell
 	url = https://github.com/gjsify/gnome-shell
+	ignore = dirty
