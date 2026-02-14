@@ -65,4 +65,4 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for build instructions and architecture det
 
 ## License
 
-TBD
+[GPLv3](LICENSE)
