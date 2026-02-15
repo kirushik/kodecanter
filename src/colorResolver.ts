@@ -47,6 +47,12 @@ export function hexToRgba(hex: string): [number, number, number, number] {
     return [r, g, b, 1.0];
 }
 
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+
+export function isValidHexColor(hex: string): boolean {
+    return HEX_COLOR_RE.test(hex);
+}
+
 export interface ProjectColor {
     hex: string;
     rgba: [number, number, number, number];
@@ -57,7 +63,7 @@ export function getColorForProject(
     overrides: Map<string, string> | null,
 ): ProjectColor {
     const override = overrides?.get(projectName);
-    if (override) {
+    if (override && isValidHexColor(override)) {
         return { hex: override, rgba: hexToRgba(override) };
     }
 

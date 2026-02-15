@@ -1,7 +1,7 @@
 // Title parsing is pure logic (exported for testing).
 // Window tracking uses GNOME Shell APIs.
 
-import { EM_DASH, ZED_WM_CLASSES, SKIP_TITLES, LOG_PREFIX } from './constants.js';
+import { EM_DASH, ZED_WM_CLASSES, LOG_PREFIX } from './constants.js';
 
 import Meta from 'gi://Meta';
 
@@ -10,11 +10,8 @@ import Meta from 'gi://Meta';
 export function parseZedTitle(title: string | null): string | null {
     if (!title) return null;
 
-    if (SKIP_TITLES.some(p => title === p || title.startsWith(p + ' ')))
-        return null;
-
     const parts = title.split(` ${EM_DASH} `);
-    return parts.length >= 2 ? parts[0].trim() : null;
+    return parts.length >= 2 ? parts[0].trim() || null : null;
 }
 
 // ── GNOME Shell window tracking ─────────────────────────────────
@@ -140,6 +137,10 @@ export class WindowTracker {
 
         this._tracked.set(metaWindow, { projectName });
         this._callbacks.onWindowTracked(metaWindow, projectName);
+
+        if (metaWindow.is_fullscreen()) {
+            this._callbacks.onWindowFullscreen(metaWindow, true);
+        }
 
         metaWindow.connectObject(
             'notify::title', () => {

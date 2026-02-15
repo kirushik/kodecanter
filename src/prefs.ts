@@ -129,7 +129,9 @@ export default class KodecanterPreferences extends ExtensionPreferences {
             const row = new Adw.ActionRow({ title: projectName });
 
             const rgba = new Gdk.RGBA();
-            rgba.parse(hexColor);
+            if (!rgba.parse(hexColor)) {
+                rgba.parse('#3498db');
+            }
 
             const colorDialog = new Gtk.ColorDialog();
             const colorButton = new Gtk.ColorDialogButton({
@@ -138,7 +140,7 @@ export default class KodecanterPreferences extends ExtensionPreferences {
                 valign: Gtk.Align.CENTER,
             });
 
-            colorButton.connect('notify::rgba', () => {
+            const colorSignalId = colorButton.connect('notify::rgba', () => {
                 const newColor = colorButton.get_rgba();
                 const hex = `#${Math.round(newColor.red * 255).toString(16).padStart(2, '0')}${Math.round(newColor.green * 255).toString(16).padStart(2, '0')}${Math.round(newColor.blue * 255).toString(16).padStart(2, '0')}`;
                 const overrides = loadOverrides();
@@ -153,6 +155,7 @@ export default class KodecanterPreferences extends ExtensionPreferences {
             });
 
             deleteButton.connect('clicked', () => {
+                colorButton.disconnect(colorSignalId);
                 const overrides = loadOverrides();
                 delete overrides[projectName];
                 saveOverrides(overrides);

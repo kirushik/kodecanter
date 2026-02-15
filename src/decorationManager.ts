@@ -1,6 +1,7 @@
 import Meta from 'gi://Meta';
 import St from 'gi://St';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 
 import { BorderWidget } from './borderWidget.js';
 import { OverlayWidget } from './overlayWidget.js';
@@ -22,6 +23,7 @@ export class DecorationManager {
     private _settings: Gio.Settings;
     private _decorated = new Map<Meta.Window, WindowDecoration>();
     private _settingsSignals: number[] = [];
+    private _pendingSources = new Set<number>();
 
     constructor(settings: Gio.Settings) {
         this._settings = settings;
@@ -37,7 +39,10 @@ export class DecorationManager {
         const overrides = this._readOverrides();
         const color = getColorForProject(projectName, overrides);
         const actor = metaWindow.get_compositor_private();
-        if (!actor) return;
+        if (!actor) {
+            this._retryDecorate(metaWindow, projectName);
+            return;
+        }
 
         const decoration: WindowDecoration = {
             border: null,
@@ -113,6 +118,7 @@ export class DecorationManager {
         if (decoration.badge) {
             decoration.badge.set_text(projectName);
             decoration.badge.set_style(`background-color: ${color.hex};`);
+            this._positionBadge(metaWindow, decoration.badge);
         }
     }
 
@@ -156,6 +162,11 @@ export class DecorationManager {
             this.removeDecorations(metaWindow);
         }
 
+        for (const id of this._pendingSources) {
+            GLib.source_remove(id);
+        }
+        this._pendingSources.clear();
+
         for (const id of this._settingsSignals) {
             this._settings.disconnect(id);
         }
@@ -165,6 +176,22 @@ export class DecorationManager {
     }
 
     private _positionBadge(metaWindow: Meta.Window, badge: St.Label): void {
+        if (badge.width > 0) {
+            this._positionBadgeImmediate(metaWindow, badge);
+            return;
+        }
+
+        const sourceId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            this._pendingSources.delete(sourceId);
+            if (badge.get_parent() && this._decorated.has(metaWindow)) {
+                this._positionBadgeImmediate(metaWindow, badge);
+            }
+            return GLib.SOURCE_REMOVE;
+        });
+        this._pendingSources.add(sourceId);
+    }
+
+    private _positionBadgeImmediate(metaWindow: Meta.Window, badge: St.Label): void {
         const frame = metaWindow.get_frame_rect();
         const buffer = metaWindow.get_buffer_rect();
         const dx = frame.x - buffer.x;
@@ -173,6 +200,25 @@ export class DecorationManager {
             dx + Math.round((frame.width - badge.width) / 2),
             dy + 8,
         );
+    }
+
+    private _retryDecorate(metaWindow: Meta.Window, projectName: string, attempt = 0): void {
+        const MAX_RETRIES = 3;
+        if (attempt >= MAX_RETRIES) {
+            console.log(`${LOG_PREFIX} Giving up on compositor private for ${projectName} after ${MAX_RETRIES} attempts`);
+            return;
+        }
+
+        const sourceId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            this._pendingSources.delete(sourceId);
+            if (metaWindow.get_compositor_private()) {
+                this.decorateWindow(metaWindow, projectName);
+            } else {
+                this._retryDecorate(metaWindow, projectName, attempt + 1);
+            }
+            return GLib.SOURCE_REMOVE;
+        });
+        this._pendingSources.add(sourceId);
     }
 
     private _readOverrides(): Map<string, string> {
