@@ -25,13 +25,13 @@ check:
 install: build
 	@mkdir -p $(INSTALL_DIR)
 	@cp -r dist/* $(INSTALL_DIR)/
+	@echo "Installed to $(INSTALL_DIR). Log out and back in for changes to take effect."
 
 # ── Launch nested Wayland session for testing ────
+# LD_PRELOAD works around a symbol resolution bug where dbus-run-session
+# prevents libmutter from finding XSetIOErrorExitHandler in libX11.
 dev: install
-	dbus-run-session -- env \
-		MUTTER_DEBUG_NUM_DUMMY_MONITORS=1 \
-		MUTTER_DEBUG_DUMMY_MODE_SPECS=1920x1080 \
-		gnome-shell --nested --wayland
+	dbus-run-session -- env LD_PRELOAD=/lib/x86_64-linux-gnu/libX11.so.6 gnome-shell --devkit
 
 # ── Package for distribution ─────────────────────
 pack: build
