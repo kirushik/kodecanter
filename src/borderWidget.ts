@@ -33,9 +33,10 @@ export const BorderWidget = GObject.registerClass(
         }
 
         sizeToWindow(metaWindow: Meta.Window): void {
-            const rect = metaWindow.get_frame_rect();
-            (this as BinThis).set_position(0, 0);
-            (this as BinThis).set_size(rect.width, rect.height);
+            const frame = metaWindow.get_frame_rect();
+            const buffer = metaWindow.get_buffer_rect();
+            (this as BinThis).set_position(frame.x - buffer.x, frame.y - buffer.y);
+            (this as BinThis).set_size(frame.width, frame.height);
         }
 
         _applyStyle(hex: string, width: number, radius: number): void {

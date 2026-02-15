@@ -165,8 +165,14 @@ export class DecorationManager {
     }
 
     private _positionBadge(metaWindow: Meta.Window, badge: St.Label): void {
-        const rect = metaWindow.get_frame_rect();
-        badge.set_position(rect.width - badge.width - 8, 8);
+        const frame = metaWindow.get_frame_rect();
+        const buffer = metaWindow.get_buffer_rect();
+        const dx = frame.x - buffer.x;
+        const dy = frame.y - buffer.y;
+        badge.set_position(
+            dx + Math.round((frame.width - badge.width) / 2),
+            dy + 8,
+        );
     }
 
     private _readOverrides(): Map<string, string> {
