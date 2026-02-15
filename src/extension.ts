@@ -27,7 +27,7 @@ export default class KodecanterExtension extends Extension {
                 decorationManager.setFullscreen(metaWindow, isFullscreen);
             },
             onWindowSizeChanged(metaWindow: Meta.Window) {
-                decorationManager.repositionBadge(metaWindow);
+                decorationManager.repositionDecorations(metaWindow);
             },
         });
 

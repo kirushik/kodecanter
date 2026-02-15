@@ -2,8 +2,6 @@
 
 export const ZED_WM_CLASSES = ['dev.zed.Zed'];
 export const EM_DASH = '\u2014';
-export const EFFECT_NAME = 'kodecanter-border';
-export const OVERLAY_EFFECT_NAME = 'kodecanter-overlay';
 export const BADGE_STYLE_CLASS = 'kodecanter-badge';
 export const LOG_PREFIX = '[Kodecanter]';
 export const SKIP_TITLES = ['Zed', 'Welcome', 'Settings', 'Extensions'];

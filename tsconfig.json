@@ -28,8 +28,8 @@
         "src/prefs.ts",
         "src/windowTracker.ts",
         "src/decorationManager.ts",
-        "src/borderEffect.ts",
-        "src/overlayEffect.ts",
+        "src/borderWidget.ts",
+        "src/overlayWidget.ts",
         "src/colorResolver.ts",
         "src/constants.ts"
     ]

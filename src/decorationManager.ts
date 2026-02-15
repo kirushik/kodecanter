@@ -2,22 +2,17 @@ import Meta from 'gi://Meta';
 import St from 'gi://St';
 import Gio from 'gi://Gio';
 
-import { BorderEffect } from './borderEffect.js';
-import { OverlayEffect } from './overlayEffect.js';
+import { BorderWidget } from './borderWidget.js';
+import { OverlayWidget } from './overlayWidget.js';
 import { getColorForProject, type ProjectColor } from './colorResolver.js';
 import {
-    EFFECT_NAME,
-    OVERLAY_EFFECT_NAME,
     BADGE_STYLE_CLASS,
     LOG_PREFIX,
-    DEFAULT_BORDER_WIDTH,
-    DEFAULT_BORDER_RADIUS,
-    DEFAULT_OVERLAY_OPACITY,
 } from './constants.js';
 
 interface WindowDecoration {
-    border: BorderEffect | null;
-    overlay: OverlayEffect | null;
+    border: BorderWidget | null;
+    overlay: OverlayWidget | null;
     badge: St.Label | null;
     color: ProjectColor;
     projectName: string;
@@ -53,21 +48,23 @@ export class DecorationManager {
         };
 
         if (this._settings.get_boolean('border-enabled')) {
-            const border = new BorderEffect({
-                color: color.rgba,
+            const border = new BorderWidget({
+                color: color.hex,
                 width: this._settings.get_int('border-width'),
                 radius: this._settings.get_int('border-radius'),
             });
-            actor.add_effect_with_name(EFFECT_NAME, border);
+            actor.add_child(border);
+            border.sizeToWindow(metaWindow);
             decoration.border = border;
         }
 
         if (this._settings.get_boolean('overlay-enabled')) {
-            const overlay = new OverlayEffect({
-                color: color.rgba,
+            const overlay = new OverlayWidget({
+                color: color.hex,
                 opacity: this._settings.get_int('overlay-opacity'),
             });
-            actor.add_effect_with_name(OVERLAY_EFFECT_NAME, overlay);
+            actor.add_child(overlay);
+            overlay.sizeToWindow(metaWindow);
             decoration.overlay = overlay;
         }
 
@@ -99,12 +96,16 @@ export class DecorationManager {
         decoration.projectName = projectName;
 
         if (decoration.border) {
-            decoration.border.setColor(color.rgba);
+            decoration.border.setColor(
+                color.hex,
+                this._settings.get_int('border-width'),
+                this._settings.get_int('border-radius'),
+            );
         }
 
         if (decoration.overlay) {
             decoration.overlay.setColor(
-                color.rgba,
+                color.hex,
                 this._settings.get_int('overlay-opacity'),
             );
         }
@@ -115,34 +116,27 @@ export class DecorationManager {
         }
     }
 
-    repositionBadge(metaWindow: Meta.Window): void {
+    repositionDecorations(metaWindow: Meta.Window): void {
         const decoration = this._decorated.get(metaWindow);
-        if (decoration?.badge) {
-            this._positionBadge(metaWindow, decoration.badge);
-        }
+        if (!decoration) return;
+
+        if (decoration.border) decoration.border.sizeToWindow(metaWindow);
+        if (decoration.overlay) decoration.overlay.sizeToWindow(metaWindow);
+        if (decoration.badge) this._positionBadge(metaWindow, decoration.badge);
     }
 
     setFullscreen(metaWindow: Meta.Window, isFullscreen: boolean): void {
         const decoration = this._decorated.get(metaWindow);
         if (!decoration) return;
 
-        const actor = metaWindow.get_compositor_private();
-        if (!actor) return;
-
         if (isFullscreen) {
-            if (decoration.border)
-                actor.remove_effect_by_name(EFFECT_NAME);
-            if (decoration.overlay)
-                actor.remove_effect_by_name(OVERLAY_EFFECT_NAME);
-            if (decoration.badge)
-                decoration.badge.hide();
+            if (decoration.border) decoration.border.hide();
+            if (decoration.overlay) decoration.overlay.hide();
+            if (decoration.badge) decoration.badge.hide();
         } else {
-            if (decoration.border)
-                actor.add_effect_with_name(EFFECT_NAME, decoration.border);
-            if (decoration.overlay)
-                actor.add_effect_with_name(OVERLAY_EFFECT_NAME, decoration.overlay);
-            if (decoration.badge)
-                decoration.badge.show();
+            if (decoration.border) decoration.border.show();
+            if (decoration.overlay) decoration.overlay.show();
+            if (decoration.badge) decoration.badge.show();
         }
     }
 
@@ -150,15 +144,9 @@ export class DecorationManager {
         const decoration = this._decorated.get(metaWindow);
         if (!decoration) return;
 
-        const actor = metaWindow.get_compositor_private();
-        if (actor) {
-            actor.remove_effect_by_name(EFFECT_NAME);
-            actor.remove_effect_by_name(OVERLAY_EFFECT_NAME);
-        }
-
-        if (decoration.badge) {
-            decoration.badge.destroy();
-        }
+        if (decoration.border) decoration.border.destroy();
+        if (decoration.overlay) decoration.overlay.destroy();
+        if (decoration.badge) decoration.badge.destroy();
 
         this._decorated.delete(metaWindow);
     }
@@ -188,7 +176,6 @@ export class DecorationManager {
     }
 
     private _onSettingsChanged(): void {
-        // Re-apply decorations to all tracked windows
         for (const [metaWindow, decoration] of this._decorated) {
             this.decorateWindow(metaWindow, decoration.projectName);
         }

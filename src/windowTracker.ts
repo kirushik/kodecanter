@@ -15,7 +15,7 @@ export function parseZedTitle(title: string | null): string | null {
         return null;
 
     const parts = title.split(` ${EM_DASH} `);
-    return parts.length >= 2 ? parts[parts.length - 1].trim() : title.trim();
+    return parts.length >= 2 ? parts[0].trim() : null;
 }
 
 // ── GNOME Shell window tracking ─────────────────────────────────

@@ -64,7 +64,7 @@ Current session logs:
 
 ## Zed-specific constraints
 
-- Window title format: `{filename} — {project_basename}` (em-dash U+2014)
+- Window title format: `{project_basename} — {filename}` (em-dash U+2014)
 - Single-process: all windows share PID, WM_CLASS is always `dev.zed.Zed`
 - Title may be null for ~200ms after window-created — always defer via `notify::title`
 
