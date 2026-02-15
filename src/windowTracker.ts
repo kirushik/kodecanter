@@ -4,7 +4,6 @@
 import { EM_DASH, ZED_WM_CLASSES, SKIP_TITLES, LOG_PREFIX } from './constants.js';
 
 import Meta from 'gi://Meta';
-import GLib from 'gi://GLib';
 
 // ── Pure logic (testable in Node.js) ────────────────────────────
 
@@ -35,6 +34,7 @@ interface TrackedWindow {
 export class WindowTracker {
     private _callbacks: WindowTrackerCallbacks;
     private _tracked = new Map<Meta.Window, TrackedWindow>();
+    private _pending = new Set<Meta.Window>();
     private _displaySignals: number[] = [];
 
     constructor(callbacks: WindowTrackerCallbacks) {
@@ -64,7 +64,13 @@ export class WindowTracker {
         }
         this._displaySignals = [];
 
+        for (const metaWindow of this._pending) {
+            metaWindow.disconnectObject(this);
+        }
+        this._pending.clear();
+
         for (const metaWindow of this._tracked.keys()) {
+            metaWindow.disconnectObject(this);
             this._callbacks.onWindowLost(metaWindow);
         }
         this._tracked.clear();
@@ -79,24 +85,27 @@ export class WindowTracker {
     }
 
     private _onWindowCreated(metaWindow: Meta.Window): void {
-        // WM_CLASS may not be set yet; defer check
         if (this._isZedWindow(metaWindow)) {
             this._tryTrack(metaWindow);
             return;
         }
 
-        // WM_CLASS might arrive late — watch for it briefly
-        const sourceId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-            if (this._isZedWindow(metaWindow) && !this._tracked.has(metaWindow)) {
-                this._tryTrack(metaWindow);
-            }
-            return GLib.SOURCE_REMOVE;
-        });
-
-        // Ensure the timeout source doesn't leak if window is destroyed first
-        metaWindow.connect('unmanaging', () => {
-            GLib.source_remove(sourceId);
-        });
+        // WM_CLASS might arrive late — watch for it via signal
+        this._pending.add(metaWindow);
+        metaWindow.connectObject(
+            'notify::wm-class', () => {
+                if (this._isZedWindow(metaWindow) && !this._tracked.has(metaWindow)) {
+                    metaWindow.disconnectObject(this);
+                    this._pending.delete(metaWindow);
+                    this._tryTrack(metaWindow);
+                }
+            },
+            'unmanaging', () => {
+                metaWindow.disconnectObject(this);
+                this._pending.delete(metaWindow);
+            },
+            this,
+        );
     }
 
     private _tryTrack(metaWindow: Meta.Window): void {
@@ -104,17 +113,22 @@ export class WindowTracker {
 
         if (!projectName) {
             // Title not ready — wait for it
-            const titleSignal = metaWindow.connect('notify::title', () => {
-                const name = parseZedTitle(metaWindow.get_title());
-                if (name) {
-                    metaWindow.disconnect(titleSignal);
-                    this._trackWindow(metaWindow, name);
-                }
-            });
-
-            metaWindow.connect('unmanaging', () => {
-                metaWindow.disconnect(titleSignal);
-            });
+            this._pending.add(metaWindow);
+            metaWindow.connectObject(
+                'notify::title', () => {
+                    const name = parseZedTitle(metaWindow.get_title());
+                    if (name) {
+                        metaWindow.disconnectObject(this);
+                        this._pending.delete(metaWindow);
+                        this._trackWindow(metaWindow, name);
+                    }
+                },
+                'unmanaging', () => {
+                    metaWindow.disconnectObject(this);
+                    this._pending.delete(metaWindow);
+                },
+                this,
+            );
             return;
         }
 
@@ -127,29 +141,29 @@ export class WindowTracker {
         this._tracked.set(metaWindow, { projectName });
         this._callbacks.onWindowTracked(metaWindow, projectName);
 
-        metaWindow.connect('notify::title', () => {
-            const newName = parseZedTitle(metaWindow.get_title());
-            const tracked = this._tracked.get(metaWindow);
-            if (!tracked || !newName) return;
+        metaWindow.connectObject(
+            'notify::title', () => {
+                const newName = parseZedTitle(metaWindow.get_title());
+                const tracked = this._tracked.get(metaWindow);
+                if (!tracked || !newName) return;
 
-            if (newName !== tracked.projectName) {
-                tracked.projectName = newName;
-                this._callbacks.onWindowUpdated(metaWindow, newName);
-            }
-        });
-
-        metaWindow.connect('size-changed', () => {
-            this._callbacks.onWindowSizeChanged(metaWindow);
-        });
-
-        metaWindow.connect('notify::fullscreen', () => {
-            this._callbacks.onWindowFullscreen(metaWindow, metaWindow.is_fullscreen());
-        });
-
-        metaWindow.connect('unmanaging', () => {
-            this._callbacks.onWindowLost(metaWindow);
-            this._tracked.delete(metaWindow);
-        });
+                if (newName !== tracked.projectName) {
+                    tracked.projectName = newName;
+                    this._callbacks.onWindowUpdated(metaWindow, newName);
+                }
+            },
+            'size-changed', () => {
+                this._callbacks.onWindowSizeChanged(metaWindow);
+            },
+            'notify::fullscreen', () => {
+                this._callbacks.onWindowFullscreen(metaWindow, metaWindow.is_fullscreen());
+            },
+            'unmanaging', () => {
+                this._callbacks.onWindowLost(metaWindow);
+                this._tracked.delete(metaWindow);
+            },
+            this,
+        );
 
         console.log(`${LOG_PREFIX} Tracking: ${projectName}`);
     }

@@ -182,7 +182,8 @@ export class DecorationManager {
     }
 
     private _onSettingsChanged(): void {
-        for (const [metaWindow, decoration] of this._decorated) {
+        const entries = [...this._decorated.entries()];
+        for (const [metaWindow, decoration] of entries) {
             this.decorateWindow(metaWindow, decoration.projectName);
         }
     }
