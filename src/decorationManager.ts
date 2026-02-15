@@ -5,6 +5,7 @@ import GLib from 'gi://GLib';
 
 import { BorderWidget } from './borderWidget.js';
 import { OverlayWidget } from './overlayWidget.js';
+import { ScaleAwareFrameEffect } from './scaleAwareFrameEffect.js';
 import { getColorForProject, type ProjectColor } from './colorResolver.js';
 import {
     BADGE_STYLE_CLASS,
@@ -15,6 +16,7 @@ interface WindowDecoration {
     border: BorderWidget | null;
     overlay: OverlayWidget | null;
     badge: St.Label | null;
+    frameEffect: ScaleAwareFrameEffect | null;
     color: ProjectColor;
     projectName: string;
 }
@@ -48,6 +50,7 @@ export class DecorationManager {
             border: null,
             overlay: null,
             badge: null,
+            frameEffect: null,
             color,
             projectName,
         };
@@ -85,6 +88,10 @@ export class DecorationManager {
             this._positionBadge(metaWindow, badge);
         }
 
+        const frameEffect = new ScaleAwareFrameEffect({ colorHex: color.hex });
+        actor.add_effect_with_name('kodecanter-frame', frameEffect);
+        decoration.frameEffect = frameEffect;
+
         this._decorated.set(metaWindow, decoration);
     }
 
@@ -120,6 +127,10 @@ export class DecorationManager {
             decoration.badge.set_style(`background-color: ${color.hex};`);
             this._positionBadge(metaWindow, decoration.badge);
         }
+
+        if (decoration.frameEffect) {
+            decoration.frameEffect.setColor(color.hex);
+        }
     }
 
     repositionDecorations(metaWindow: Meta.Window): void {
@@ -139,10 +150,12 @@ export class DecorationManager {
             if (decoration.border) decoration.border.hide();
             if (decoration.overlay) decoration.overlay.hide();
             if (decoration.badge) decoration.badge.hide();
+            if (decoration.frameEffect) decoration.frameEffect.set_enabled(false);
         } else {
             if (decoration.border) decoration.border.show();
             if (decoration.overlay) decoration.overlay.show();
             if (decoration.badge) decoration.badge.show();
+            if (decoration.frameEffect) decoration.frameEffect.set_enabled(true);
         }
     }
 
@@ -153,6 +166,10 @@ export class DecorationManager {
         if (decoration.border) decoration.border.destroy();
         if (decoration.overlay) decoration.overlay.destroy();
         if (decoration.badge) decoration.badge.destroy();
+        if (decoration.frameEffect) {
+            const actor = metaWindow.get_compositor_private();
+            if (actor) actor.remove_effect(decoration.frameEffect);
+        }
 
         this._decorated.delete(metaWindow);
     }

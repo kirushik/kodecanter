@@ -25,8 +25,9 @@ src/                  TypeScript source (compiles to dist/)
   prefs.ts            Preferences UI (libadwaita)
   windowTracker.ts    Window creation/title/destruction signals
   decorationManager.ts  Orchestrates borders, badges, overlays per window
-  borderEffect.ts     GLSL SDF rounded-rectangle border shader
-  overlayEffect.ts    GLSL color overlay shader
+  borderWidget.ts     CSS border frame (St.Bin child of WindowActor)
+  overlayWidget.ts    CSS color overlay (St.Bin child of WindowActor)
+  scaleAwareFrameEffect.ts  Clutter.Effect that draws compensated border at small paint scales
   colorResolver.ts    Hash-based color assignment (pure, no gi:// imports)
   constants.ts        Shared constants (pure, no gi:// imports)
 
@@ -133,11 +134,12 @@ Meta.Window 'size-changed'
 
 | Type | Implementation | Attached to |
 |------|---------------|-------------|
-| Border | `Clutter.ShaderEffect` with GLSL SDF | `Meta.WindowActor` effect |
+| Border | `St.Bin` with CSS border (`BorderWidget`) | `Meta.WindowActor` child |
 | Badge | `St.Label` | `Meta.WindowActor` child |
-| Overlay | `Clutter.ShaderEffect` with GLSL mix | `Meta.WindowActor` effect |
+| Overlay | `St.Bin` with CSS background (`OverlayWidget`) | `Meta.WindowActor` child |
+| Thumbnail frame | `Clutter.Effect` with `ColorNode` (`ScaleAwareFrameEffect`) | `Meta.WindowActor` effect |
 
-All three propagate through `Clutter.Clone` (Overview, Alt-Tab, dock previews) automatically.
+The first three propagate through `Clutter.Clone` (Overview, Alt-Tab, dock previews) automatically but become invisible at small scales. The thumbnail frame effect uses `Clutter.Effect` with `is_in_clone_paint()` to detect clone context and draws a scale-compensated border at small scales (workspace thumbnails, dock previews).
 
 ### Color pipeline
 

@@ -12,6 +12,7 @@ import "@girs/st-17/st-17-ambient";
 import "@girs/meta-17/meta-17-ambient";
 import "@girs/mtk-17/mtk-17-ambient";
 import "@girs/shell-17/shell-17-ambient";
+import "@girs/graphene-1.0/graphene-1.0-ambient";
 import "@girs/adw-1/adw-1-ambient";
 import "@girs/gtk-4.0/gtk-4.0-ambient";
 import "@girs/gdk-4.0/gdk-4.0-ambient";

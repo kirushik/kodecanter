@@ -10,3 +10,5 @@ export const DEFAULT_OVERLAY_OPACITY = 15;
 export const DEFAULT_SATURATION = 75;
 export const DEFAULT_LIGHTNESS = 50;
 export const GOLDEN_ANGLE = 137.508;
+export const SCALE_THRESHOLD = 0.55;
+export const THUMBNAIL_BORDER_PX = 4;

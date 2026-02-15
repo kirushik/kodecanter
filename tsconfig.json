@@ -31,6 +31,7 @@
         "src/borderWidget.ts",
         "src/overlayWidget.ts",
         "src/colorResolver.ts",
-        "src/constants.ts"
+        "src/constants.ts",
+        "src/scaleAwareFrameEffect.ts"
     ]
 }

@@ -1,5 +1,7 @@
 # Kodecanter
 
+_Zed's beautiful. Now tell them apart._
+
 ![Kodecanter concept](docs/kodecanter.png)
 
 A GNOME Shell 49 extension that colors [Zed](https://zed.dev) editor windows by project — giving each codebase a unique hue so you can tell them apart at a glance.
