@@ -70,7 +70,7 @@ Current session logs:
 
 ## MCP servers available
 
-- **context7** — look up current library/API docs (GLib, Clutter, St, Meta). Use when unsure about a GNOME API.
+- **context7** — look up current library/API docs (GLib, Clutter, St, Meta). Use to look up for example GNOME API. **IMPORTANT**: don't assume you know the API surface — always check the docs for the specific versions of the libraries and frameworks we're using. Context7 is user-submittable: if some library hadn't been found in the docs, escalate to user to add it to Context7's docs collection.
 - **mcp-server-fetch** — fetch web pages. Use for reading gjs.guide, GNOME GitLab source, or extension review guidelines.
 - **mcp-server-git** — git operations. Use for commits, diffs, branch management.
 - **ripgrep** — fast codebase search. Use before reading files to find relevant code quickly.
