@@ -1,5 +1,6 @@
 import GObject from 'gi://GObject';
 import Clutter from 'gi://Clutter';
+import Cogl from 'gi://Cogl';
 
 // GLSL fragment shader: SDF rounded-rectangle border.
 // Draws a border of `border_width` pixels with `border_radius` rounded corners
@@ -65,7 +66,7 @@ export const BorderEffect = GObject.registerClass(
             width: number;
             radius: number;
         }) {
-            super({ shader_type: Clutter.ShaderType.FRAGMENT_SHADER });
+            super({ shader_type: Cogl.ShaderType.FRAGMENT });
 
             this._borderColor = params.color;
             this._borderWidth = params.width;

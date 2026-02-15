@@ -1,5 +1,6 @@
 import GObject from 'gi://GObject';
 import Clutter from 'gi://Clutter';
+import Cogl from 'gi://Cogl';
 
 // Simple color overlay using ShaderEffect.
 // Blends a semi-transparent color over the entire window.
@@ -30,7 +31,7 @@ export const OverlayEffect = GObject.registerClass(
             color: [number, number, number, number];
             opacity: number; // 0-100
         }) {
-            super({ shader_type: Clutter.ShaderType.FRAGMENT_SHADER });
+            super({ shader_type: Cogl.ShaderType.FRAGMENT });
 
             this._overlayColor = [
                 params.color[0],
